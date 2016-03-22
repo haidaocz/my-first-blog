@@ -37,3 +37,63 @@ class Comment(models.Model):
     def __str__(self):
         return self.text
 
+
+
+class Tech(models.Model):
+    author = models.ForeignKey('auth.User')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    source_link1 = models.CharField(max_length=200)
+    source_link2 = models.CharField(max_length=200)
+    created_date = models.DateTimeField(
+            default=timezone.now)
+    published_date = models.DateTimeField(
+            blank=True, null=True)
+    read_time = models.CharField(max_length=10)
+    slug = models.SlugField(unique=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title
+
+class Fashion(models.Model):
+    author = models.ForeignKey('auth.User')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    source_link = models.CharField(max_length=200)
+    created_date = models.DateTimeField(
+            default=timezone.now)
+    published_date = models.DateTimeField(
+            blank=True, null=True)
+    read_time = models.CharField(max_length=10)
+    slug = models.SlugField(unique=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title
+
+class Article(models.Model):
+    author = models.ForeignKey('auth.User')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    source_link = models.CharField(max_length=200)
+    created_date = models.DateTimeField(
+            default=timezone.now)
+    published_date = models.DateTimeField(
+            blank=True, null=True)
+    read_time = models.CharField(max_length=10)
+    slug = models.SlugField(unique=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title
+
