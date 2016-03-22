@@ -3,6 +3,13 @@
 {% block content %}
     <h1>New comment</h1>
     <form method="POST" class="post-form">{% csrf_token %}
+        <label>Author:</label>
+        <p>
+            {% if user.is_authenticated %}
+                {{ user.username }}
+                <input type="hidden" name="author" value="{{user.username}}">
+            {% endif %}
+        </p>
         {{ form.as_p }}
         <button type="submit" class="save btn btn-default">Send</button>
     </form>
