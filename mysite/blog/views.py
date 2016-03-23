@@ -2,18 +2,48 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.utils import timezone
-from .models import Post, Comment
-from .forms import PostForm, CommentForm
+from .models import Post, Comment, Article
+from .forms import PostForm, CommentForm, ArticleForm
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.urlresolvers import reverse
 
 # Create your views here.
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('-published_date')
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    paginator = Paginator(posts, 15) # Show 15 posts per page
+
+    page = request.GET.get('page')
+
+    # pagination process
+    try:
+        posts_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        posts_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        posts_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'blog/post_list.html', {'posts': posts_page})
 
 @login_required
 def post_draft_list(request):
     posts = Post.objects.filter(published_date__isnull=True).order_by('-created_date')
-    return render(request, 'blog/post_draft_list.html', {'posts': posts})
+    paginator = Paginator(posts, 15) # Show 15 posts per page
+
+    page = request.GET.get('page')
+
+    # pagination process
+    try:
+        posts_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        posts_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        posts_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'blog/post_draft_list.html', {'posts': posts_page})
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -92,3 +122,25 @@ def comment_remove(request, pk):
     post_pk = comment.post.pk
     comment.delete()
     return redirect('blog.views.post_detail', pk=post_pk)
+
+
+def article_new(request):
+    if request.method == "POST":
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.author = request.user
+            # post.published_date = timezone.now()
+            article.save()
+            return redirect('article_detail', slug=article.slug)
+    else:
+        form = ArticleForm()
+    return render(request, 'blog/article_edit.html', {'form': form})
+
+
+
+def article_detail(request, slug):
+
+    post = get_object_or_404(Article, slug=slug)
+
+    return render(request, 'blog/article_detail.html', {'post': post})

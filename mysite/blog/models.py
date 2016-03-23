@@ -2,7 +2,7 @@
 from django.db import models
 from django.utils import timezone
 from django.template.defaultfilters import slugify
-
+from django.core.urlresolvers import reverse
 
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
@@ -56,8 +56,8 @@ class Tech(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
     content = models.TextField()
-    source_link1 = models.CharField(max_length=200)
-    source_link2 = models.CharField(max_length=200)
+    source_link1 = models.CharField(max_length=300)
+    source_link2 = models.CharField(max_length=300)
 
     created_date = models.DateTimeField(
             default=timezone.now)
@@ -66,7 +66,7 @@ class Tech(models.Model):
             blank=True, null=True)
 
     read_time = models.CharField(max_length=10)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, blank=True)
     visible = models.BooleanField(default=True)
 
     def publish(self):
@@ -80,7 +80,7 @@ class Fashion(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
     content = models.TextField()
-    source_link = models.CharField(max_length=200)
+    source_link = models.CharField(max_length=300)
 
     created_date = models.DateTimeField(
             default=timezone.now)
@@ -89,7 +89,7 @@ class Fashion(models.Model):
             blank=True, null=True)
 
     read_time = models.CharField(max_length=10)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, blank=True)
     visible = models.BooleanField(default=True)
 
     def publish(self):
@@ -103,7 +103,7 @@ class Article(models.Model):
     author = models.ForeignKey('auth.User')
     title = models.CharField(max_length=200)
     content = models.TextField()
-    source_link = models.CharField(max_length=200)
+    source_link = models.CharField(max_length=300)
 
     created_date = models.DateTimeField(
             default=timezone.now)
@@ -112,14 +112,57 @@ class Article(models.Model):
             blank=True, null=True)
 
     read_time = models.CharField(max_length=10)
-    slug = models.SlugField(unique=True)
+
+    slug = models.SlugField(max_length=200, blank=True)
+
     visible = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            slug_string = (
+                str(self.created_date.year), str(self.created_date.month),
+                str(self.created_date.day), str(self.title)
+            )
+            self.slug = slugify(slug_string)
+        super(Article, self).save(*args, **kwargs)
+
+    # def get_absolute_url(self):
+    #     kwargs = {'year': self.created_date.year,
+    #               'month': self.created_date.month,
+    #               'day': self.created_date.day,
+    #               'slug': self.slug,
+    #               'pk': self.pk
+    #               }
+    #     return reverse('article_detail', kwargs=kwargs)
+
 
     def publish(self):
         self.published_date = timezone.now()
         self.save()
 
+    def approved_comments(self):
+        return self.comments.filter(approved_comment=True)
+
     def __str__(self):
         return self.title
 
+class ArticleComment(models.Model):
+    post = models.ForeignKey('blog.Article', related_name='comments')
+    author = models.CharField(max_length=200)
+    text = models.TextField()
+    created_date = models.DateTimeField(default=timezone.now)
+    approved_comment = models.BooleanField(default=False)
+
+    visible = models.BooleanField(default=True)
+
+    def approve(self):
+        self.approved_comment = True
+        self.save()
+
+    def delete(self):
+        self.visible = False
+        self.save()
+
+    def __str__(self):
+        return self.text
 
