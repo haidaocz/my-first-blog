@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 from django.template.defaultfilters import slugify
 from django.core.urlresolvers import reverse
+from taggit.managers import TaggableManager
 
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
@@ -12,8 +13,21 @@ class Post(models.Model):
             default=timezone.now)
     published_date = models.DateTimeField(
             blank=True, null=True)
-    # slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, blank=True)
+
+    tags = TaggableManager()
+
     visible = models.BooleanField(default=True)
+
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            slug_string = (
+                str(self.created_date.year), str(self.created_date.month),
+                str(self.created_date.day), str(self.title)
+            )
+            self.slug = slugify(slug_string)
+        super(Post, self).save(*args, **kwargs)
 
     def publish(self):
         self.published_date = timezone.now()
@@ -50,34 +64,21 @@ class Comment(models.Model):
     def __str__(self):
         return self.text
 
-
-
-class Tech(models.Model):
-    author = models.ForeignKey('auth.User')
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    source_link1 = models.CharField(max_length=300)
-    source_link2 = models.CharField(max_length=300)
-
-    created_date = models.DateTimeField(
-            default=timezone.now)
-
-    published_date = models.DateTimeField(
-            blank=True, null=True)
-
-    read_time = models.CharField(max_length=10)
-    slug = models.SlugField(max_length=200, blank=True)
-    visible = models.BooleanField(default=True)
-
-    def publish(self):
-        self.published_date = timezone.now()
-        self.save()
-
-    def __str__(self):
-        return self.title
+# class Tag(models.Model):
+#     name = models.CharField(max_length=50)
+#     visible = models.BooleanField(default=True)
+#
+#     def delete(self):
+#         self.visible = False
+#         self.save()
+#
+#     def __str__(self):
+#         return self.name
 
 class Fashion(models.Model):
     author = models.ForeignKey('auth.User')
+    # tags = models.ManyToManyField(Tag)
+
     title = models.CharField(max_length=200)
     content = models.TextField()
     source_link = models.CharField(max_length=300)
@@ -89,8 +90,16 @@ class Fashion(models.Model):
             blank=True, null=True)
 
     read_time = models.CharField(max_length=10)
+     # read count
+    read_counts = models.IntegerField(default=True)
     slug = models.SlugField(max_length=200, blank=True)
     visible = models.BooleanField(default=True)
+
+    tags = TaggableManager()
+
+    def counts(self):
+        self.read_counts += 1
+        self.save()
 
     def publish(self):
         self.published_date = timezone.now()
@@ -101,6 +110,8 @@ class Fashion(models.Model):
 
 class Article(models.Model):
     author = models.ForeignKey('auth.User')
+    # tags = models.ManyToManyField(Tag)
+
     title = models.CharField(max_length=200)
     content = models.TextField()
     source_link = models.CharField(max_length=300)
@@ -113,9 +124,17 @@ class Article(models.Model):
 
     read_time = models.CharField(max_length=10)
 
+    # read count
+    read_counts = models.IntegerField(default=True)
+
     slug = models.SlugField(max_length=200, blank=True)
+    tags = TaggableManager()
 
     visible = models.BooleanField(default=True)
+
+    def counts(self):
+        self.read_counts += 1
+        self.save()
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -138,6 +157,10 @@ class Article(models.Model):
 
     def publish(self):
         self.published_date = timezone.now()
+        self.save()
+
+    def delete(self):
+        self.visible = False
         self.save()
 
     def approved_comments(self):
@@ -166,3 +189,37 @@ class ArticleComment(models.Model):
     def __str__(self):
         return self.text
 
+
+
+class Tech(models.Model):
+    author = models.ForeignKey('auth.User')
+    # tags = models.ManyToManyField(Tag)
+
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    source_link1 = models.CharField(max_length=300)
+    source_link2 = models.CharField(max_length=300)
+
+    created_date = models.DateTimeField(
+            default=timezone.now)
+
+    published_date = models.DateTimeField(
+            blank=True, null=True)
+
+    read_time = models.CharField(max_length=10)
+     # read count
+    read_counts = models.IntegerField(default=True)
+
+    slug = models.SlugField(max_length=200, blank=True)
+    visible = models.BooleanField(default=True)
+
+    def counts(self):
+        self.read_counts += 1
+        self.save()
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title

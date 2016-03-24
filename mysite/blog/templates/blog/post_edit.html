@@ -1,9 +1,14 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
+    <!--{% load wysiwyg %}-->
+    <!--{% wysiwyg_setup %}-->
     <h1>New post</h1>
     <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
+        <!--<textarea id="foo"></textarea>-->
+
+        <!--{% wysiwyg_editor "foo" %}-->
         <button type="submit" class="save btn btn-default">Save</button>
     </form>
 {% endblock %}

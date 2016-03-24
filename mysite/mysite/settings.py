@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'blog',
+    'django_wysiwyg',
+    'ckeditor',
+    'hitcount',
+    'taggit',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -146,4 +150,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 LOGIN_REDIRECT_URL = '/'
 
+DJANGO_WYSIWYG_FLAVOR = "ckeditor"
+DJANGO_WYSIWYG_MEDIA_URL = "/Users/michael/workspace/python/django/djangogirls"
+
+#hitcount settings
+
+HITCOUNT_KEEP_HIT_ACTIVE = {'minutes': 60}
+HITCOUNT_HITS_PER_IP_LIMIT = 0  # unlimited
+HITCOUNT_EXCLUDE_USER_GROUP = ()  # not used
+HITCOUNT_KEEP_HIT_IN_DATABASE = {'days': 30}
 

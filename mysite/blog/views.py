@@ -45,9 +45,15 @@ def post_draft_list(request):
 
     return render(request, 'blog/post_draft_list.html', {'posts': posts_page})
 
-def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    return render(request, 'blog/post_detail.html', {'post': post})
+# def post_detail(request, pk):
+#     post = get_object_or_404(Post, pk=pk)
+#     return render(request, 'blog/post_detail.html', {'post': post})
+def post_detail(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    post_tags = post.tags.all()
+
+    return render(request, 'blog/post_detail.html', {'post': post, 'tags':post_tags})
+
 
 @login_required
 def post_new(request):
@@ -58,14 +64,15 @@ def post_new(request):
             post.author = request.user
             # post.published_date = timezone.now()
             post.save()
-            return redirect('post_detail', pk=post.pk)
+            form.save_m2m()   #reserve tags
+            return redirect('post_detail', slug=post.slug)
     else:
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
 @login_required
-def post_edit(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+def post_edit(request, slug):
+    post = get_object_or_404(Post, slug=slug)
     if request.method == "POST":
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
@@ -73,16 +80,17 @@ def post_edit(request, pk):
             post.author = request.user
             post.published_date = timezone.now()
             post.save()
-            return redirect('post_detail', pk=post.pk)
+            form.save_m2m()   #reserve tags
+            return redirect('blog.views.post_detail', slug=post.slug)
     else:
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
 
 @login_required
-def post_publish(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+def post_publish(request, slug):
+    post = get_object_or_404(Post, slug=slug)
     post.publish()
-    return redirect('blog.views.post_detail', pk=pk)
+    return redirect('blog.views.post_detail', slug=post.slug)
 
 # in models.py
 # def publish(self):
@@ -90,8 +98,8 @@ def post_publish(request, pk):
 #     self.save()
 
 @login_required
-def post_remove(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+def post_remove(request, slug):
+    post = get_object_or_404(Post, slug=slug)
     post.delete()
     return redirect('blog.views.post_list')
 
@@ -105,7 +113,7 @@ def add_comment_to_post(request, pk):
             comment.post = post
             comment.author = request.POST["author"] # modified by michael
             comment.save()
-            return redirect('blog.views.post_detail', pk=post.pk)
+            return redirect('blog.views.post_detail', slug=post.slug)
     else:
         form = CommentForm()
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
@@ -114,14 +122,14 @@ def add_comment_to_post(request, pk):
 def comment_approve(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     comment.approve()
-    return redirect('blog.views.post_detail', pk=comment.post.pk)
+    return redirect('blog.views.post_detail', slug=comment.post.slug)
 
 @login_required
 def comment_remove(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
-    post_pk = comment.post.pk
+    slug = comment.post.slug
     comment.delete()
-    return redirect('blog.views.post_detail', pk=post_pk)
+    return redirect('blog.views.post_detail', slug=slug)
 
 
 def article_new(request):
@@ -132,6 +140,7 @@ def article_new(request):
             article.author = request.user
             # post.published_date = timezone.now()
             article.save()
+            form.save_m2m()   #reserve tags
             return redirect('article_detail', slug=article.slug)
     else:
         form = ArticleForm()
@@ -140,7 +149,54 @@ def article_new(request):
 
 
 def article_detail(request, slug):
-
     post = get_object_or_404(Article, slug=slug)
+    post_tags = post.tags.all()
 
-    return render(request, 'blog/article_detail.html', {'post': post})
+    return render(request, 'blog/article_detail.html', {'post': post, 'tags': post_tags})
+
+
+def tag_articles(request, tag):
+    articles = Article.objects.filter(tags__name__in=[tag])
+    paginator = Paginator(articles, 15) # Show 15 articles per page
+    page = request.GET.get('page')
+
+     # pagination process
+    try:
+        articles_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        articles_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        articles_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'blog/tag_articles.html', {'posts': articles_page})
+
+@login_required
+def article_edit(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    if request.method == "POST":
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.published_date = timezone.now()
+            post.save()
+            form.save_m2m()
+            return redirect('blog.views.article_detail', slug=post.slug)
+    else:
+        form = ArticleForm(instance=article)
+    return render(request, 'blog/article_edit.html', {'form': form})
+
+
+@login_required
+def article_publish(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    article.publish()
+    return redirect('blog.views.article_detail', slug=article.slug)
+
+@login_required
+def article_remove(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    article.delete()
+    return redirect('blog.views.article_list')
