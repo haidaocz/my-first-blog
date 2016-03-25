@@ -3,4 +3,5 @@ __pycache__
 venv
 db.sqlite3
 /static
+/mysite/mysite/settings.py
 .DS_Store
