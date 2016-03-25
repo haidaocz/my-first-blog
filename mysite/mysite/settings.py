@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'ckeditor',
     'hitcount',
     'taggit',
+    'rest_framework',
+    'taggit_serializer',
+
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -160,3 +163,11 @@ HITCOUNT_HITS_PER_IP_LIMIT = 0  # unlimited
 HITCOUNT_EXCLUDE_USER_GROUP = ()  # not used
 HITCOUNT_KEEP_HIT_IN_DATABASE = {'days': 30}
 
+# Django Restful Framework
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
