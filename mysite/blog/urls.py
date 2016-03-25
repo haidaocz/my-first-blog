@@ -17,7 +17,7 @@ urlpatterns = [
     url(r'^comment/(?P<pk>\d+)/approve/$', views.comment_approve, name='comment_approve'),
     url(r'^comment/(?P<pk>\d+)/remove/$', views.comment_remove, name='comment_remove'),
     url(r'^article/detail/(?P<slug>[-\w]+)/$', views.article_detail, name='article_detail'),
-
+    url(r'^search/', include('haystack.urls')),
 ]
 
 
