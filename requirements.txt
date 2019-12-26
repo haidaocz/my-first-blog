@@ -16,6 +16,6 @@ psycopg2==2.6.1
 six==1.10.0
 urllib3==1.14
 uWSGI==2.0.12
-waitress==0.8.10
+waitress==1.4.1
 WebOb==1.6.0
 WebTest==2.0.20
